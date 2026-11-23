@@ -3,15 +3,26 @@ const SIZE = 4;
 
 let grid = [];          // поле 4x4, в клетке лежит плитка или null
 let score = 0;
+let gameOver = false;
+let recordSaved = false;
 let nextId = 1;         // у каждой плитки свой id
 
-let tileElements = {};  
+let tileElements = {};  // id плитки -> div на странице
 
 const board = document.getElementById('board');
 const scoreText = document.getElementById('score');
+const leadersBtn = document.getElementById('leaders-btn');
+const gameOverBlock = document.getElementById('game-over');
+const gameOverText = document.getElementById('game-over-text');
+const nameInput = document.getElementById('name-input');
+const saveBtn = document.getElementById('save-btn');
+const leadersModal = document.getElementById('leaders-modal');
+const leadersBody = document.getElementById('leaders-body');
+const noLeaders = document.getElementById('no-leaders');
+const closeLeadersBtn = document.getElementById('close-leaders');
 
 
-// поле 
+// ---------- поле ----------
 
 // создаём 16 клеток
 function createCells() {
@@ -83,7 +94,7 @@ function getAllTiles() {
 }
 
 
-// отрисовка 
+// ---------- отрисовка ----------
 
 function setPosition(el, row, col) {
   el.style.setProperty('--row', row);
@@ -110,7 +121,7 @@ function addTileElement(tile, isNew) {
   tileElements[tile.id] = el;
 }
 
-// полностью перерисовать плитки (типа новая игра, загрузка, отмена хода)
+// полностью перерисовать плитки (новая игра, загрузка, отмена хода)
 function drawAllTiles(withAnimation) {
   for (const id in tileElements) {
     tileElements[id].remove();
@@ -130,7 +141,7 @@ function updateScore() {
 
 // ходы 
 
-// клетки одной линии начиная с той стороныкуда двигаем
+// клетки одной линииначиная с той стороны куда двигаем
 function getLine(index, dir) {
   const line = [];
   for (let k = 0; k < SIZE; k++) {
@@ -143,6 +154,10 @@ function getLine(index, dir) {
 }
 
 function move(dir) {
+  if (gameOver) {
+    return;
+  }
+
   let moved = false;
 
   for (let i = 0; i < SIZE; i++) {
@@ -204,9 +219,29 @@ function move(dir) {
     }
   }
 
+  gameOver = !canMove();
+  recordSaved = false;
 
   updateScore();
   drawAllTiles(false);
+
+  if (gameOver) {
+    showGameOver();
+  }
+}
+
+function canMove() {
+  if (getEmptyCells().length > 0) {
+    return true;
+  }
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const value = grid[r][c].value;
+      if (c < SIZE - 1 && grid[r][c + 1].value === value) return true;
+      if (r < SIZE - 1 && grid[r + 1][c].value === value) return true;
+    }
+  }
+  return false;
 }
 
 
@@ -215,6 +250,8 @@ function move(dir) {
 function newGame() {
   grid = emptyGrid();
   score = 0;
+  gameOver = false;
+  recordSaved = false;
 
   // в начале на поле 1-3 плитки
   const count = randomInt(1, 3);
@@ -223,13 +260,108 @@ function newGame() {
   }
 
   drawAllTiles(true);
+  hideGameOver();
   updateScore();
+}
+
+
+// конец игры 
+
+function showGameOver() {
+  gameOverBlock.classList.remove('hidden');
+  if (recordSaved) {
+    gameOverText.textContent = 'Ваш рекорд сохранен';
+    nameInput.classList.add('hidden');
+    saveBtn.classList.add('hidden');
+  } else {
+    gameOverText.textContent = 'Игра окончена! Ваш счёт: ' + score;
+    nameInput.classList.remove('hidden');
+    saveBtn.classList.remove('hidden');
+    nameInput.value = '';
+  }
+}
+
+function hideGameOver() {
+  gameOverBlock.classList.add('hidden');
+}
+
+function saveRecord() {
+  const name = nameInput.value.trim();
+  if (name === '') {
+    nameInput.focus();
+    return;
+  }
+
+  const leaders = getLeaders();
+  leaders.push({
+    name: name,
+    score: score,
+    date: new Date().toLocaleDateString('ru-RU')
+  });
+  leaders.sort(function (a, b) {
+    return b.score - a.score;
+  });
+  localStorage.setItem('leaders2048', JSON.stringify(leaders.slice(0, 10)));
+
+  recordSaved = true;
+
+  gameOverText.textContent = 'Ваш рекорд сохранен';
+  nameInput.classList.add('hidden');
+  saveBtn.classList.add('hidden');
+}
+
+
+// таблица лидеров 
+
+function getLeaders() {
+  const data = localStorage.getItem('leaders2048');
+  if (data) {
+    return JSON.parse(data);
+  }
+  return [];
+}
+
+function showLeaders() {
+  const leaders = getLeaders();
+  leadersBody.innerHTML = '';
+
+  for (const leader of leaders) {
+    const tr = document.createElement('tr');
+
+    const nameTd = document.createElement('td');
+    nameTd.textContent = leader.name;
+    const scoreTd = document.createElement('td');
+    scoreTd.textContent = leader.score;
+    const dateTd = document.createElement('td');
+    dateTd.textContent = leader.date;
+
+    tr.appendChild(nameTd);
+    tr.appendChild(scoreTd);
+    tr.appendChild(dateTd);
+    leadersBody.appendChild(tr);
+  }
+
+  if (leaders.length === 0) {
+    noLeaders.classList.remove('hidden');
+  } else {
+    noLeaders.classList.add('hidden');
+  }
+
+  leadersModal.classList.remove('hidden');
+}
+
+function closeLeaders() {
+  leadersModal.classList.add('hidden');
 }
 
 
 // обработчики 
 
 document.addEventListener('keydown', function (e) {
+  if (!leadersModal.classList.contains('hidden')) {
+    return;
+  }
+
   let dir = null;
   if (e.key === 'ArrowUp') dir = 'up';
   if (e.key === 'ArrowDown') dir = 'down';
@@ -239,6 +371,15 @@ document.addEventListener('keydown', function (e) {
   if (dir) {
     e.preventDefault();
     move(dir);
+  }
+});
+
+leadersBtn.addEventListener('click', showLeaders);
+closeLeadersBtn.addEventListener('click', closeLeaders);
+saveBtn.addEventListener('click', saveRecord);
+nameInput.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') {
+    saveRecord();
   }
 });
 

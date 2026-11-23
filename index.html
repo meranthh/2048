@@ -23,6 +23,30 @@
     </div>
 
     <div class="board" id="board">
+      <div class="game-over hidden" id="game-over">
+        <p id="game-over-text">Игра окончена!</p>
+        <input type="text" id="name-input" placeholder="Ваше имя" maxlength="20">
+        <button id="save-btn" class="btn">Сохранить результат</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- окно с таблицей лидеров -->
+  <div class="modal hidden" id="leaders-modal">
+    <div class="modal-content">
+      <h2>Таблица лидеров</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Имя</th>
+            <th>Очки</th>
+            <th>Дата</th>
+          </tr>
+        </thead>
+        <tbody id="leaders-body"></tbody>
+      </table>
+      <p id="no-leaders" class="hidden">Пока нет рекордов</p>
+      <button id="close-leaders" class="btn">Закрыть</button>
     </div>
   </div>
 

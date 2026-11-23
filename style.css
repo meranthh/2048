@@ -133,3 +133,86 @@ h1 {
 .tile-super { background-color: #1f3a20; color: white; font-size: 22px; }
 
 
+/* конец игры */
+.game-over {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(242, 244, 238, 0.85);
+  border-radius: 8px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+#game-over-text {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  padding: 0 10px;
+}
+
+#name-input {
+  width: 200px;
+  padding: 10px;
+  font-size: 16px;
+  border: 2px solid #8a9a7b;
+  border-radius: 6px;
+  outline: none;
+}
+
+#name-input:focus {
+  border-color: #5f7a55;
+}
+
+
+/* таблица лидеров */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.modal-content {
+  background-color: #f7f9f4;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 450px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-content h2 {
+  margin-bottom: 15px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+}
+
+th,
+td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #d2dac9;
+}
+
+#no-leaders {
+  margin-bottom: 15px;
+}
+
