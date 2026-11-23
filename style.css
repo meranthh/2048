@@ -116,6 +116,7 @@ h1 {
   font-size: 40px;
   font-weight: bold;
   z-index: 2;
+  transition: top 0.12s ease, left 0.12s ease;
 }
 
 /* цвета плиток */
@@ -132,6 +133,26 @@ h1 {
 .tile-2048 { background-color: #2a4d2a; color: white; font-size: 28px; }
 .tile-super { background-color: #1f3a20; color: white; font-size: 22px; }
 
+/* анимации */
+.tile-new {
+  animation: appear 0.2s ease;
+}
+
+.tile-merged {
+  animation: pop 0.2s ease;
+  z-index: 3;
+}
+
+@keyframes appear {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
 
 /* конец игры */
 .game-over {
@@ -220,3 +241,82 @@ td {
   margin-bottom: 15px;
 }
 
+/* кнопки управления */
+.controls {
+  display: none;
+}
+
+.control-btn {
+  background-color: #5f7a55;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 24px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.control-btn:active {
+  background-color: #4d6645;
+}
+
+.up    { grid-column: 2; grid-row: 1; }
+.left  { grid-column: 1; grid-row: 2; }
+.down  { grid-column: 2; grid-row: 2; }
+.right { grid-column: 3; grid-row: 2; }
+
+/* планшеты и телефоны */
+@media (max-width: 768px), (pointer: coarse) {
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(3, 60px);
+    grid-template-rows: repeat(2, 60px);
+    gap: 8px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  /* прячем кнопки когда открыты рекорды или игра закончилась */
+  body.no-controls .controls {
+    display: none;
+  }
+}
+
+/* телефоны */
+@media (max-width: 480px) {
+  .container {
+    width: 300px;
+    padding: 20px 0;
+  }
+
+  h1 {
+    font-size: 44px;
+  }
+
+  .btn {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .board {
+    --gap: 8px;
+    width: 300px;
+    height: 300px;
+  }
+
+  .tile {
+    font-size: 30px;
+  }
+
+  .tile-128, .tile-256, .tile-512 { font-size: 26px; }
+  .tile-1024, .tile-2048 { font-size: 21px; }
+  .tile-super { font-size: 17px; }
+
+  #game-over-text {
+    font-size: 20px;
+  }
+
+  #name-input {
+    width: 180px;
+  }
+}

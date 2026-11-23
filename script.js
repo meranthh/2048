@@ -7,6 +7,8 @@ let prevState = null;   // прошлое состояние для отмены
 let gameOver = false;
 let recordSaved = false;
 let nextId = 1;         // у каждой плитки свой id
+let isMoving = false;   // пока идёт анимация, новые ходы не принимаем
+let moveTimer = null;
 
 let tileElements = {};  
 
@@ -97,7 +99,7 @@ function getAllTiles() {
   return tiles;
 }
 
-// поле в виде чисел (0 = пусто) шоб сохранять
+// поле в виде чисел (0 = пусто) шобы сохранять
 function getValues() {
   const values = [];
   for (let r = 0; r < SIZE; r++) {
@@ -150,6 +152,9 @@ function addTileElement(tile, isNew) {
 
 // полностью перерисовать плитки (типа новая игра, загрузка, отмена хода)
 function drawAllTiles(withAnimation) {
+  clearTimeout(moveTimer);
+  isMoving = false;
+
   for (const id in tileElements) {
     tileElements[id].remove();
   }
@@ -169,6 +174,16 @@ function updateUndoBtn() {
   undoBtn.disabled = prevState === null || gameOver;
 }
 
+// кнопки управления видны ток во время игры
+function updateControls() {
+  const leadersOpen = !leadersModal.classList.contains('hidden');
+  if (gameOver || leadersOpen) {
+    document.body.classList.add('no-controls');
+  } else {
+    document.body.classList.remove('no-controls');
+  }
+}
+
 
 // ходы 
 
@@ -185,13 +200,15 @@ function getLine(index, dir) {
 }
 
 function move(dir) {
-  if (gameOver) {
+  if (gameOver || isMoving) {
     return;
   }
 
   const oldValues = getValues();
   const oldScore = score;
   let moved = false;
+  const removed = []; // плитки которые слились в другие
+  const merged = [];  // плитки которые увеличились
 
   for (let i = 0; i < SIZE; i++) {
     const coords = getLine(i, dir);
@@ -212,6 +229,11 @@ function move(dir) {
         if (j + 1 < tiles.length && tiles[j].value === tiles[j + 1].value) {
           tiles[j].value *= 2;
           score += tiles[j].value;
+          tiles[j + 1].mergedInto = tiles[j];
+          removed.push(tiles[j + 1]);
+          if (!merged.includes(tiles[j])) {
+            merged.push(tiles[j]);
+          }
           newTiles.push(tiles[j]);
           j++;
           wasMerge = true;
@@ -242,6 +264,16 @@ function move(dir) {
     return;
   }
 
+  // слившиеся плитки едут туда же куда плитка в которую они слились
+  for (const tile of removed) {
+    let target = tile.mergedInto;
+    while (target.mergedInto) {
+      target = target.mergedInto;
+    }
+    tile.row = target.row;
+    tile.col = target.col;
+  }
+
   prevState = { values: oldValues, score: oldScore };
 
   // после хода появляются 1-2 новые плитки
@@ -260,11 +292,47 @@ function move(dir) {
   updateScore();
   updateUndoBtn();
   saveGame();
-  drawAllTiles(false);
+  animateMove(removed, merged, newTiles);
+}
 
-  if (gameOver) {
-    showGameOver();
+function animateMove(removed, merged, newTiles) {
+  isMoving = true;
+
+  // сначала двигаем плитки 
+  for (const tile of getAllTiles()) {
+    if (tileElements[tile.id]) {
+      setPosition(tileElements[tile.id], tile.row, tile.col);
+    }
   }
+  for (const tile of removed) {
+    setPosition(tileElements[tile.id], tile.row, tile.col);
+  }
+
+  // после движения убираем лишние, обновляем числа и добавляем новые
+  moveTimer = setTimeout(function () {
+    for (const tile of merged) {
+      if (tile.mergedInto) continue;
+      const el = tileElements[tile.id];
+      updateTileLook(el, tile.value);
+      void el.offsetWidth; // шоб анимация запустилась заново
+      el.classList.add('tile-merged');
+    }
+
+    for (const tile of removed) {
+      tileElements[tile.id].remove();
+      delete tileElements[tile.id];
+    }
+
+    for (const tile of newTiles) {
+      addTileElement(tile, true);
+    }
+
+    isMoving = false;
+
+    if (gameOver) {
+      showGameOver();
+    }
+  }, 120);
 }
 
 // есть ли хоть один возможный ход
@@ -334,10 +402,12 @@ function showGameOver() {
     saveBtn.classList.remove('hidden');
     nameInput.value = '';
   }
+  updateControls();
 }
 
 function hideGameOver() {
   gameOverBlock.classList.add('hidden');
+  updateControls();
 }
 
 function saveRecord() {
@@ -367,7 +437,7 @@ function saveRecord() {
 }
 
 
-// таблица лидеров 
+// таблица лидеров
 
 function getLeaders() {
   const data = localStorage.getItem('leaders2048');
@@ -404,10 +474,12 @@ function showLeaders() {
   }
 
   leadersModal.classList.remove('hidden');
+  updateControls();
 }
 
 function closeLeaders() {
   leadersModal.classList.add('hidden');
+  updateControls();
 }
 
 
@@ -462,6 +534,13 @@ document.addEventListener('keydown', function (e) {
   }
 });
 
+const controlButtons = document.querySelectorAll('.control-btn');
+controlButtons.forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    move(btn.dataset.dir);
+  });
+});
+
 undoBtn.addEventListener('click', undo);
 restartBtn.addEventListener('click', newGame);
 restartBtn2.addEventListener('click', newGame);
@@ -485,6 +564,8 @@ if (loadGame()) {
   updateUndoBtn();
   if (gameOver) {
     showGameOver();
+  } else {
+    updateControls();
   }
 } else {
   newGame();
