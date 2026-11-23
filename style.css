@@ -1,0 +1,121 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f2f4ee;
+  color: #3a4a35;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  width: 400px;
+  padding: 30px 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* шапка */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+h1 {
+  font-size: 60px;
+}
+
+.score-box {
+  background-color: #8a9a7b;
+  color: white;
+  padding: 8px 20px;
+  border-radius: 6px;
+  text-align: center;
+  min-width: 90px;
+}
+
+.score-title {
+  display: block;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+#score {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/* кнопки */
+.buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.buttons .btn {
+  flex: 1;
+}
+
+.btn {
+  background-color: #5f7a55;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.btn:hover {
+  background-color: #4d6645;
+}
+
+.btn:disabled {
+  background-color: #b7c1ae;
+  cursor: default;
+}
+
+/* игровое поле */
+.board {
+  --gap: 12px;
+  position: relative;
+  width: 400px;
+  height: 400px;
+  background-color: #b3bfa6;
+  border-radius: 8px;
+}
+
+.cell,
+.tile {
+  position: absolute;
+  width: calc((100% - 5 * var(--gap)) / 4);
+  height: calc((100% - 5 * var(--gap)) / 4);
+  top: calc(var(--gap) + var(--row) * ((100% - 5 * var(--gap)) / 4 + var(--gap)));
+  left: calc(var(--gap) + var(--col) * ((100% - 5 * var(--gap)) / 4 + var(--gap)));
+  border-radius: 6px;
+}
+
+.cell {
+  background-color: #d2dac9;
+}
+
+.tile {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+  font-weight: bold;
+  z-index: 2;
+}
+
+
