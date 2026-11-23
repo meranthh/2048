@@ -118,4 +118,18 @@ h1 {
   z-index: 2;
 }
 
+/* цвета плиток */
+.tile-2    { background-color: #eef3e8; color: #3a4a35; }
+.tile-4    { background-color: #e1ebd5; color: #3a4a35; }
+.tile-8    { background-color: #c7dbb0; color: #3a4a35; }
+.tile-16   { background-color: #aed08f; color: #3a4a35; }
+.tile-32   { background-color: #94c06f; color: white; }
+.tile-64   { background-color: #7aae55; color: white; }
+.tile-128  { background-color: #63994a; color: white; font-size: 34px; }
+.tile-256  { background-color: #52863f; color: white; font-size: 34px; }
+.tile-512  { background-color: #43733a; color: white; font-size: 34px; }
+.tile-1024 { background-color: #365f32; color: white; font-size: 28px; }
+.tile-2048 { background-color: #2a4d2a; color: white; font-size: 28px; }
+.tile-super { background-color: #1f3a20; color: white; font-size: 22px; }
+
 
