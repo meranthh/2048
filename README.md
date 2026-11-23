@@ -2,9 +2,12 @@
 
 Лабораторная работа №3: веб-версия 2048
 
-**Деплой:** 
+**Деплой:** https://meranthh.github.io/2048/
 
 ## Видео
+
+
+https://github.com/user-attachments/assets/2017c3c6-496f-4331-b736-75d26d05ef0b
 
 
 
