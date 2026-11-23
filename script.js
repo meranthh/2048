@@ -3,14 +3,18 @@ const SIZE = 4;
 
 let grid = [];          // поле 4x4, в клетке лежит плитка или null
 let score = 0;
+let prevState = null;   // прошлое состояние для отмены хода
 let gameOver = false;
 let recordSaved = false;
 let nextId = 1;         // у каждой плитки свой id
 
-let tileElements = {};  // id плитки -> div на странице
+let tileElements = {};  
 
 const board = document.getElementById('board');
 const scoreText = document.getElementById('score');
+const undoBtn = document.getElementById('undo-btn');
+const restartBtn = document.getElementById('restart-btn');
+const restartBtn2 = document.getElementById('restart-btn-2');
 const leadersBtn = document.getElementById('leaders-btn');
 const gameOverBlock = document.getElementById('game-over');
 const gameOverText = document.getElementById('game-over-text');
@@ -22,7 +26,7 @@ const noLeaders = document.getElementById('no-leaders');
 const closeLeadersBtn = document.getElementById('close-leaders');
 
 
-// ---------- поле ----------
+// поле 
 
 // создаём 16 клеток
 function createCells() {
@@ -93,8 +97,31 @@ function getAllTiles() {
   return tiles;
 }
 
+// поле в виде чисел (0 = пусто) шоб сохранять
+function getValues() {
+  const values = [];
+  for (let r = 0; r < SIZE; r++) {
+    values.push([]);
+    for (let c = 0; c < SIZE; c++) {
+      values[r].push(grid[r][c] ? grid[r][c].value : 0);
+    }
+  }
+  return values;
+}
 
-// ---------- отрисовка ----------
+function setFromValues(values) {
+  grid = emptyGrid();
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (values[r][c] !== 0) {
+        grid[r][c] = createTile(values[r][c], r, c);
+      }
+    }
+  }
+}
+
+
+// отрисовка 
 
 function setPosition(el, row, col) {
   el.style.setProperty('--row', row);
@@ -121,7 +148,7 @@ function addTileElement(tile, isNew) {
   tileElements[tile.id] = el;
 }
 
-// полностью перерисовать плитки (новая игра, загрузка, отмена хода)
+// полностью перерисовать плитки (типа новая игра, загрузка, отмена хода)
 function drawAllTiles(withAnimation) {
   for (const id in tileElements) {
     tileElements[id].remove();
@@ -136,6 +163,10 @@ function drawAllTiles(withAnimation) {
 
 function updateScore() {
   scoreText.textContent = score;
+}
+
+function updateUndoBtn() {
+  undoBtn.disabled = prevState === null || gameOver;
 }
 
 
@@ -158,6 +189,8 @@ function move(dir) {
     return;
   }
 
+  const oldValues = getValues();
+  const oldScore = score;
   let moved = false;
 
   for (let i = 0; i < SIZE; i++) {
@@ -209,6 +242,8 @@ function move(dir) {
     return;
   }
 
+  prevState = { values: oldValues, score: oldScore };
+
   // после хода появляются 1-2 новые плитки
   const newTiles = [];
   const count = randomInt(1, 2);
@@ -223,6 +258,8 @@ function move(dir) {
   recordSaved = false;
 
   updateScore();
+  updateUndoBtn();
+  saveGame();
   drawAllTiles(false);
 
   if (gameOver) {
@@ -230,6 +267,7 @@ function move(dir) {
   }
 }
 
+// есть ли хоть один возможный ход
 function canMove() {
   if (getEmptyCells().length > 0) {
     return true;
@@ -250,6 +288,7 @@ function canMove() {
 function newGame() {
   grid = emptyGrid();
   score = 0;
+  prevState = null;
   gameOver = false;
   recordSaved = false;
 
@@ -262,6 +301,22 @@ function newGame() {
   drawAllTiles(true);
   hideGameOver();
   updateScore();
+  updateUndoBtn();
+  saveGame();
+}
+
+function undo() {
+  if (prevState === null || gameOver) {
+    return;
+  }
+  setFromValues(prevState.values);
+  score = prevState.score;
+  prevState = null;
+
+  drawAllTiles(false);
+  updateScore();
+  updateUndoBtn();
+  saveGame();
 }
 
 
@@ -304,6 +359,7 @@ function saveRecord() {
   localStorage.setItem('leaders2048', JSON.stringify(leaders.slice(0, 10)));
 
   recordSaved = true;
+  saveGame();
 
   gameOverText.textContent = 'Ваш рекорд сохранен';
   nameInput.classList.add('hidden');
@@ -355,6 +411,38 @@ function closeLeaders() {
 }
 
 
+// сохранение 
+
+function saveGame() {
+  const data = {
+    grid: getValues(),
+    score: score,
+    prevState: prevState,
+    gameOver: gameOver,
+    recordSaved: recordSaved
+  };
+  localStorage.setItem('game2048', JSON.stringify(data));
+}
+
+function loadGame() {
+  const saved = localStorage.getItem('game2048');
+  if (!saved) {
+    return false;
+  }
+  try {
+    const data = JSON.parse(saved);
+    setFromValues(data.grid);
+    score = data.score;
+    prevState = data.prevState;
+    gameOver = data.gameOver;
+    recordSaved = data.recordSaved;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+
 // обработчики 
 
 document.addEventListener('keydown', function (e) {
@@ -374,6 +462,9 @@ document.addEventListener('keydown', function (e) {
   }
 });
 
+undoBtn.addEventListener('click', undo);
+restartBtn.addEventListener('click', newGame);
+restartBtn2.addEventListener('click', newGame);
 leadersBtn.addEventListener('click', showLeaders);
 closeLeadersBtn.addEventListener('click', closeLeaders);
 saveBtn.addEventListener('click', saveRecord);
@@ -387,4 +478,14 @@ nameInput.addEventListener('keydown', function (e) {
 // запуск 
 
 createCells();
-newGame();
+
+if (loadGame()) {
+  drawAllTiles(false);
+  updateScore();
+  updateUndoBtn();
+  if (gameOver) {
+    showGameOver();
+  }
+} else {
+  newGame();
+}

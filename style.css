@@ -170,6 +170,10 @@ h1 {
   border-color: #5f7a55;
 }
 
+.restart-icon {
+  font-size: 22px;
+  padding: 6px 14px;
+}
 
 /* таблица лидеров */
 .modal {
